@@ -33,13 +33,12 @@ def dump():
     备份数据库
     """
     # 文件名
-    filename = "{database}-{date}.sql".format(path=config['path'], database=config['database'],
-                                              date=get_custom_date(config['dateFormat']))
+    filename = "{database}-{date}.sql".format(database=config['database'], date=get_custom_date(config['dateFormat']))
     # 文件绝对路径
     file = "{path}/{filename}".format(path=config['path'], filename=filename)
     # 备份
     os.system(dump_cmd.format(user=config['user'], password=config['password'], host=config['host'],
-                              database=config['database'], path=config['path'], file=file))
+                              database=config['database'], file=file))
     # 压缩
     tar = tarfile.open(file[0:len(file) - 3] + 'gz', 'w')
     tar.add(file, arcname=filename)
