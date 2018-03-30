@@ -9,9 +9,17 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 # MySQL备份命令
 
-dump_cmd = "mysqldump --user={user} --password={password} --skip-lock-tables --host={host} {database} > {file}"
+dump_cmd = "{prefix}mysqldump --user={user} --password={password} --skip-lock-tables --host={host} {database} > {file}"
 # 读取配置文件
-config = json.load(open('config.json', 'r'))['mysql']
+config = json.load(open('mysql_config.json', 'r'))
+
+
+def check_folder(path):
+    """
+    检查路径是否存在
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 def delete_expired():
@@ -29,17 +37,22 @@ def delete_expired():
     print('[%s] delete expired dumped file(s) success' % get_custom_date())
 
 
-def dump(database="mysql"):
+def dump(database="mysql", node=None):
     """
     开始备份数据库
     """
     # 文件名
+    if node is None:
+        node = {}
     filename = "{database}-{date}.sql".format(database=database, date=get_custom_date(config['dateFormat']))
     # 文件绝对路径
-    file = "{path}/{filename}".format(path=config['path'], filename=filename)
+    path = config['path']
+    check_folder(path)
+    file = "{path}/{filename}".format(path=path, filename=filename)
     # 备份
-    os.system(dump_cmd.format(user=config['user'], password=config['password'], host=config['host'],
-                              database=database, file=file))
+    os.system(
+        dump_cmd.format(prefix=config['mysqldump'], user=node['user'], password=node['password'], host=node['host'],
+                        database=database, file=file))
     # 压缩
     tar = tarfile.open(file[0:len(file) - 3] + 'gz', 'w')
     tar.add(file, arcname=filename)
@@ -48,16 +61,30 @@ def dump(database="mysql"):
     os.remove(file)
 
 
+def parse_node(node):
+    """
+    解析节点数据
+    """
+    dbs = node['dbs']
+    if isinstance(dbs, list):
+        for db in dbs:
+            dump(db, node)
+    else:
+        dump(dbs, node)
+
+
 def pre_dump():
     """
     检查配置，准备备份数据库
     """
-    dbs = config['database']
-    if isinstance(dbs, list):
-        for db in dbs:
-            dump(db)
+    global config
+    config = json.load(open('mysql_config.json', 'r'))
+    nodes = config['nodes']
+    if isinstance(nodes, list):
+        for node in nodes:
+            parse_node(node)
     else:
-        dump(dbs)
+        parse_node(nodes)
     print('[%s] dump success' % get_custom_date())
     delete_expired()
 

@@ -1,0 +1,23 @@
+{
+    "nodes": [
+        {
+            "user": "zhazhapan",
+            "password": "zhazhapan",
+            "host": "127.0.0.1",
+            "dbs": [
+                "efo"
+            ]
+        }
+    ],
+    "mysqldump": "/usr/local/mysql-5.7.17-macos10.12-x86_64/bin/",
+    "path": "/Users/pantao/Desktop/backup",
+    "dateFormat": "%Y-%m-%d-%H-%M-%S",
+    "expired": "60*60*24*100",
+    "schedulerParams": {
+        "cron": false,
+        "dayOfWeek": "0-6",
+        "hour": 15,
+        "minute": 27,
+        "seconds": 10
+    }
+}
